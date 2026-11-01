@@ -1,1 +1,127 @@
-
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>وەستا ئەنەس</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080f1c;--panel:#111e31;--panel2:#0c1728;--line:#263951;--gold:#f5bd32;--blue:#38bdf8;--muted:#9aabc0;--red:#ef5350;--green:#35c78a}
+*{box-sizing:border-box;font-family:Vazirmatn,system-ui,sans-serif}
+body{margin:0;background:var(--bg);color:#f7f9fc;padding:0 0 86px}
+button,input,select,textarea{font:inherit}
+.top{padding:28px 18px 20px;background:linear-gradient(145deg,#172b45,#0b1423);border-bottom:1px solid var(--line);border-radius:0 0 26px 26px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;border-radius:15px;background:linear-gradient(145deg,#ffd66b,#e59b12);display:grid;place-items:center;color:#172033;font-size:23px;font-weight:900;box-shadow:0 8px 24px #f5bd3230}
+h1{font-size:22px;margin:0;color:var(--gold)}.sub{font-size:12px;color:var(--muted);margin:4px 0 0}
+.wrap{max-width:760px;margin:auto;padding:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 8px 25px #0002}
+h2{font-size:18px;margin:0 0 14px}h3{font-size:15px;margin:0 0 8px;color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{padding:14px;border-radius:15px;background:var(--panel2);border:1px solid var(--line);min-height:92px}
+.stat span{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;font-size:20px;color:var(--gold);margin-top:7px;overflow-wrap:anywhere}
+input,select,textarea{width:100%;background:#091424;color:#fff;border:1px solid #344a65;border-radius:11px;padding:12px;margin:5px 0;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+button{border:0;border-radius:11px;padding:11px 14px;font-weight:700;cursor:pointer}
+.primary{background:var(--gold);color:#1b1b1b}.secondary{background:#23405c;color:#fff}.danger{background:#762d34;color:#fff}.full{width:100%;margin-top:8px}
+.muted{color:var(--muted);font-size:12px;line-height:1.8}
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:5;display:flex;justify-content:space-around;gap:3px;padding:9px 5px calc(9px + env(safe-area-inset-bottom));background:#0c1728f2;border-top:1px solid var(--line);backdrop-filter:blur(12px)}
+.tabs button{background:transparent;color:var(--muted);font-size:11px;padding:7px 5px;min-width:0;flex:1}.tabs button.active{color:var(--gold);background:#f5bd3218}
+.tabs .ico{display:block;font-size:18px;margin-bottom:2px}
+.page{display:none}.page.active{display:block}
+.item{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:13px;margin:9px 0}
+.item p{font-size:13px;color:#d6deea;line-height:1.8;margin:5px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.pill{font-size:11px;padding:4px 9px;border-radius:20px;background:#203a55;color:#9bdcff}
+.notice{padding:11px;border-radius:12px;background:#302817;color:#f9d77a;font-size:12px;line-height:1.8}
+.hidden{display:none!important}
+label{font-size:12px;color:var(--muted)}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+#toast{position:fixed;top:12px;left:12px;right:12px;z-index:20;background:#1d3149;border:1px solid #45617e;padding:12px;border-radius:12px;display:none}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.top{border-radius:0 0 28px 28px}}
+@media print{body{background:white;color:black}.tabs,.no-print,.top{display:none!important}.panel,.item{background:white;color:black;border:1px solid #aaa}}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<header class="top"><div class="wrap" style="padding:0">
+  <div class="brand"><div class="logo">و</div><div><h1>وەستا ئەنەس</h1><p class="sub">سیستەمی بەڕێوەبردنی ئاو، ئاوەڕۆ و کارەبا</p></div></div>
+  <div class="row" style="margin-top:18px"><span class="muted" id="userLabel">سیستەمی بەڕێوەبردن</span><button class="secondary hidden" id="logoutBtn" onclick="logout()">چوونەدەرەوە</button></div>
+</div></header>
+<main class="wrap">
+<section id="setup" class="panel hidden">
+<h2>پەیوەندی بە Supabase</h2><p class="muted">Project URL و Publishable / anon key بنووسە. هیچ Service Role Key ـێک لێرە مەنووسە.</p>
+<input id="sbUrl" placeholder="https://xxxx.supabase.co"><input id="sbKey" placeholder="Publishable / anon key">
+<button class="primary full" onclick="saveConfig()">پاشەکەوت و پەیوەستبوون</button>
+</section>
+<section id="auth" class="panel hidden">
+<h2>چوونەژوورەوە</h2><input id="email" type="email" placeholder="ئیمەیڵ"><input id="password" type="password" placeholder="وشەی نهێنی">
+<button class="primary full" onclick="login()">چوونەژوورەوە</button><p class="muted">ئەکاونتەکان لە Supabase Auth دروست دەکرێن. دەسەڵاتی ئەدمین لە داتابەیس دیاری دەکرێت.</p>
+</section>
+<div id="app" class="hidden">
+<section id="home" class="page active">
+<div class="panel"><div class="row"><h2>پوختەی کار</h2><span class="pill" id="roleBadge">بەکارهێنەر</span></div>
+<div class="grid">
+<div class="stat"><span>کۆی پڕۆژەکان</span><strong id="projectCount">0</strong></div>
+<div class="stat"><span>پارەی وەرگیراو</span><strong id="incomeTotal">0</strong></div>
+<div class="stat"><span>قەرزی ماوە</span><strong id="debtTotal">0</strong></div>
+<div class="stat"><span>کۆی خەرجی</span><strong id="expenseTotal">0</strong></div>
+</div></div>
+<div class="notice">داتاکان لە Supabase هەڵدەگیرێن. بۆ پاراستنی زانیارییەکان، RLS ـی خشتەکان دەبێت لە Supabase چالاک بێت.</div>
+<div class="panel"><h2>دوایین پڕۆژەکان</h2><div id="recentProjects" class="muted">هیچ پڕۆژەیەک نییە.</div></div>
+</section>
+<section id="projects" class="page">
+<div class="panel"><h2>پڕۆژەکان</h2><div id="projectForm" class="adminOnly">
+<input id="pName" placeholder="ناوی کڕیار"><input id="pPhone" placeholder="ژمارەی تەلەفۆن">
+<select id="pType"><option>ئاو و ئاوەڕۆ</option><option>کارەبا</option><option>ئاو و کارەبا</option><option>چاکسازی</option></select>
+<input id="pTotal" type="number" min="0" placeholder="نرخی تەواوی کار"><input id="pPaid" type="number" min="0" placeholder="پارەی وەرگیراو">
+<input id="pDate" type="date"><input id="pLocation" placeholder="شوێنی کار / ناونیشان">
+<button class="primary full" onclick="addProject()">+ تۆمارکردنی پڕۆژە</button></div><div id="projectList"></div></div>
+</section>
+<section id="expenses" class="page"><div class="panel"><h2>خەرجییەکان</h2>
+<div class="adminOnly"><input id="expenseName" placeholder="ناوی خەرجی"><input id="expenseAmount" type="number" min="0" placeholder="بڕی خەرجی"><input id="expenseDate" type="date"><button class="primary full" onclick="addExpense()">تۆمارکردنی خەرجی</button></div><div id="expenseList"></div></div></section>
+<section id="staff" class="page"><div class="panel"><h2>کارمەندان</h2>
+<div class="adminOnly"><input id="staffName" placeholder="ناوی کارمەند"><input id="staffJob" placeholder="پیشە"><input id="staffPhone" placeholder="ژمارەی تەلەفۆن"><input id="staffSalary" type="number" min="0" placeholder="مووچە"><button class="primary full" onclick="addStaff()">زیادکردنی کارمەند</button></div><div id="staffList"></div></div></section>
+<section id="receipt" class="page"><div class="panel"><h2>وەسڵی پارەدان</h2><select id="receiptProject" onchange="showReceipt()"><option value="">پڕۆژە هەڵبژێرە</option></select><div id="receiptContent"></div><button class="primary full no-print" onclick="window.print()">چاپکردنی وەسڵ</button></div></section>
+<section id="reports" class="page"><div class="panel"><h2>ڕاپۆرتی دارایی</h2><div id="reportContent" class="muted"></div></div></section>
+</div>
+</main>
+<nav class="tabs hidden no-print" id="tabs">
+<button class="active" onclick="openPage('home',this)"><span class="ico">⌂</span>سەرەکی</button>
+<button onclick="openPage('projects',this)"><span class="ico">▣</span>پڕۆژە</button>
+<button onclick="openPage('expenses',this)"><span class="ico">↗</span>خەرجی</button>
+<button onclick="openPage('staff',this)"><span class="ico">♙</span>کارمەند</button>
+<button onclick="openPage('receipt',this)"><span class="ico">▤</span>وەسڵ</button>
+<button onclick="openPage('reports',this)"><span class="ico">▥</span>ڕاپۆرت</button>
+</nav>
+<script>
+let db=null,currentUser=null,profile=null,projects=[],expenses=[],staff=[];
+const $=id=>document.getElementById(id);
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',3500)}
+function showOnly(id){['setup','auth','app'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden');$('tabs').classList.toggle('hidden',id!=='app');$('logoutBtn').classList.toggle('hidden',id!=='app')}
+function saveConfig(){const url=$('sbUrl').value.trim(),key=$('sbKey').value.trim();if(!url||!key)return toast('URL و Key پڕ بکەرەوە');localStorage.setItem('wa_url',url);localStorage.setItem('wa_key',key);location.reload()}
+async function initialize(){const url=localStorage.getItem('wa_url'),key=localStorage.getItem('wa_key');if(!url||!key){showOnly('setup');return}try{db=window.supabase.createClient(url,key);const {data,error}=await db.auth.getSession();if(error)throw error;if(data.session){currentUser=data.session.user;await loadProfile()}else showOnly('auth')}catch(e){toast('هەڵەی پەیوەندی: '+e.message);showOnly('setup')}}
+async function login(){if(!db)return toast('سەرەتا Supabase پەیوەست بکە');const email=$('email').value.trim(),password=$('password').value;if(!email||!password)return toast('ئیمەیڵ و وشەی نهێنی پڕ بکەرەوە');const {data,error}=await db.auth.signInWithPassword({email,password});if(error)return toast(error.message);currentUser=data.user;await loadProfile()}
+async function logout(){await db.auth.signOut();currentUser=null;profile=null;showOnly('auth')}
+async function loadProfile(){const {data,error}=await db.from('profiles').select('id,role').eq('id',currentUser.id).maybeSingle();if(error||!data){toast('پڕۆفایل نەدۆزرایەوە؛ پێویستە لە Supabase دروست بکرێت');await db.auth.signOut();currentUser=null;showOnly('auth');return}profile=data;$('userLabel').textContent=currentUser.email;$('roleBadge').textContent=profile.role==='admin'?'ئەدمین':'بینەر';document.querySelectorAll('.adminOnly').forEach(e=>e.classList.toggle('hidden',profile.role!=='admin'));showOnly('app');await refreshAll()}
+function isAdmin(){return profile?.role==='admin'}
+function openPage(id,btn){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');btn.classList.add('active')}
+async function refreshAll(){await Promise.all([loadProjects(),loadExpenses(),loadStaff()]);updateDashboard()}
+async function loadProjects(){const {data,error}=await db.from('projects').select('*').order('created_at',{ascending:false});if(error){toast('پڕۆژەکان: '+error.message);return}projects=data||[];renderProjects();fillReceiptOptions()}
+async function addProject(){if(!isAdmin())return toast('دەسەڵاتت نییە');const total=Number($('pTotal').value||0),paid=Number($('pPaid').value||0),title=$('pName').value.trim();if(!title||total<0||paid<0||paid>total)return toast('زانیارییەکان بە دروستی پڕ بکەرەوە');const row={title,phone:$('pPhone').value.trim(),type:$('pType').value,total,paid,project_date:$('pDate').value||null,location:$('pLocation').value.trim()};const {error}=await db.from('projects').insert(row);if(error)return toast(error.message);['pName','pPhone','pTotal','pPaid','pDate','pLocation'].forEach(x=>$(x).value='');await refreshAll();toast('پڕۆژەکە تۆمار کرا')}
+function renderProjects(){$('projectList').innerHTML='';$('recentProjects').innerHTML='';projects.forEach((p,i)=>{const debt=Number(p.total||0)-Number(p.paid||0),el=document.createElement('div');el.className='item';const h=document.createElement('h3');h.textContent=p.title||'بێ ناو';const info=document.createElement('p');info.textContent=`${p.type||''} • ${p.phone||'بێ تەلەفۆن'} • نرخ: ${p.total||0} • وەرگیراو: ${p.paid||0} • قەرز: ${debt}`;el.append(h,info);if(p.location){const l=document.createElement('p');l.textContent='شوێن: '+p.location;el.append(l)}if(isAdmin()){const b=document.createElement('button');b.className='danger';b.textContent='سڕینەوە';b.onclick=()=>deleteProject(p.id);el.append(b)}$('projectList').append(el);if(i<3){const r=document.createElement('div');r.className='item';r.textContent=p.title+' — '+(p.project_date||'');$('recentProjects').append(r)}});if(!projects.length)$('recentProjects').textContent='هیچ پڕۆژەیەک نییە.'}
+async function deleteProject(id){if(!isAdmin()||!confirm('دڵنیایت لە سڕینەوە؟'))return;const {error}=await db.from('projects').delete().eq('id',id);if(error)return toast(error.message);await refreshAll()}
+async function loadExpenses(){const {data,error}=await db.from('expenses').select('*').order('created_at',{ascending:false});if(error){toast('خەرجی: '+error.message);return}expenses=data||[];renderExpenses()}
+async function addExpense(){if(!isAdmin())return toast('دەسەڵاتت نییە');const name=$('expenseName').value.trim(),amount=Number($('expenseAmount').value||0);if(!name||amount<=0)return toast('ناو و بڕی خەرجی بنووسە');const {error}=await db.from('expenses').insert({name,amount,expense_date:$('expenseDate').value||null});if(error)return toast(error.message);['expenseName','expenseAmount','expenseDate'].forEach(x=>$(x).value='');await refreshAll();toast('خەرجی تۆمار کرا')}
+function renderExpenses(){$('expenseList').innerHTML='';expenses.forEach(e=>{const d=document.createElement('div');d.className='item';const p=document.createElement('p');p.textContent=(e.name||'خەرجی')+' — '+e.amount+' دۆلار';d.append(p);if(isAdmin()){const b=document.createElement('button');b.className='danger';b.textContent='سڕینەوە';b.onclick=async()=>{if(!confirm('سڕینەوە؟'))return;const {error}=await db.from('expenses').delete().eq('id',e.id);if(error)toast(error.message);else await refreshAll()};d.append(b)}$('expenseList').append(d)})}
+async function loadStaff(){const {data,error}=await db.from('staff').select('*').order('created_at',{ascending:false});if(error){toast('کارمەندان: '+error.message);return}staff=data||[];renderStaff()}
+async function addStaff(){if(!isAdmin())return toast('دەسەڵاتت نییە');const name=$('staffName').value.trim();if(!name)return toast('ناوی کارمەند بنووسە');const {error}=await db.from('staff').insert({full_name:name,job_title:$('staffJob').value.trim(),phone:$('staffPhone').value.trim(),salary:Number($('staffSalary').value||0)});if(error)return toast(error.message);['staffName','staffJob','staffPhone','staffSalary'].forEach(x=>$(x).value='');await refreshAll();toast('کارمەند زیاد کرا')}
+function renderStaff(){$('staffList').innerHTML='';staff.forEach(s=>{const d=document.createElement('div');d.className='item';const p=document.createElement('p');p.textContent=`${s.full_name||''} — ${s.job_title||''} — مووچە: ${s.salary||0}`;d.append(p);$('staffList').append(d)})}
+function updateDashboard(){const income=projects.reduce((s,p)=>s+Number(p.paid||0),0),debt=projects.reduce((s,p)=>s+Number(p.total||0)-Number(p.paid||0),0),expense=expenses.reduce((s,e)=>s+Number(e.amount||0),0);$('projectCount').textContent=projects.length;$('incomeTotal').textContent=income.toLocaleString()+' دۆلار';$('debtTotal').textContent=debt.toLocaleString()+' دۆلار';$('expenseTotal').textContent=expense.toLocaleString()+' دۆلار';$('reportContent').textContent=`ژمارەی پڕۆژە: ${projects.length} | داهاتی وەرگیراو: ${income.toLocaleString()} دۆلار | قەرز: ${debt.toLocaleString()} دۆلار | خەرجی: ${expense.toLocaleString()} دۆلار | داهات دوای خەرجی: ${(income-expense).toLocaleString()} دۆلار`}
+function fillReceiptOptions(){const s=$('receiptProject');s.innerHTML='<option value="">پڕۆژە هەڵبژێرە</option>';projects.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.title;s.append(o)})}
+function showReceipt(){const p=projects.find(x=>String(x.id)===$('receiptProject').value);if(!p){$('receiptContent').innerHTML='';return}const d=Number(p.total||0)-Number(p.paid||0);const box=document.createElement('div');box.className='item';const h=document.createElement('h2');h.textContent='وەستا ئەنەس — وەسڵی پارەدان';box.append(h);[['کڕیار',p.title],['تەلەفۆن',p.phone],['جۆری کار',p.type],['نرخی تەواو',p.total+' دۆلار'],['پارەی وەرگیراو',p.paid+' دۆلار'],['قەرزی ماوە',d+' دۆلار'],['بەروار',p.project_date||'']].forEach(([k,v])=>{const q=document.createElement('p');q.textContent=k+': '+(v||'—');box.append(q)});$('receiptContent').replaceChildren(box)}
+initialize();
+</script>
+</body>
+</html>
