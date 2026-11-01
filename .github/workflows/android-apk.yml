@@ -1,3 +1,4 @@
+
 name: Build WASTA ANAS APK
 
 on:
@@ -13,6 +14,14 @@ jobs:
     steps:
       - name: Get source code
         uses: actions/checkout@v4
+
+      - name: Check project files
+        run: |
+          pwd
+          ls -la
+          ls -la www
+          test -f www/index.html
+          cat capacitor.config.json
 
       - name: Setup Node
         uses: actions/setup-node@v4
